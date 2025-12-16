@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { createShortUrl } from '@/services/urlApi'
+import type { CreateUrlRequest } from '@repo/shared'
 
 const originalUrl = ref('')
 const result = ref<string | null>(null)
@@ -9,15 +10,17 @@ const loading = ref(false)
 const showAdvancedOptions = ref<boolean>(false)
 const urlAlias = ref('')
 const shortBaseUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+const expirationTime = ref<string | undefined>()
 
 const onSubmit = async () => {
   loading.value = true
   error.value = null
   result.value = null
   try {
-    const payload = {
+    const payload: CreateUrlRequest = {
       originalUrl: originalUrl.value.trim(),
       alias: urlAlias.value.trim() || undefined,
+      expirationTime: expirationTime.value,
     }
     const res = await createShortUrl(payload)
     result.value = res.shortUrl

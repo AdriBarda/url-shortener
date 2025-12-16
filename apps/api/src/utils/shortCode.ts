@@ -1,4 +1,4 @@
-export const genCode = (len = 6): string => {
+export function genCode(len = 6): string {
   return Math.random()
     .toString(36)
     .slice(2, 2 + len)

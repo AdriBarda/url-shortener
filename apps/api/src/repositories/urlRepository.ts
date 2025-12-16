@@ -19,12 +19,12 @@ const mapRow = (row: UrlRow): Url => {
   }
 }
 
-export const createUrl = async (input: {
+export async function createUrl(input: {
   shortCode: string
   originalUrl: string
   expirationTime?: string
   userId?: string
-}): Promise<Url> => {
+}): Promise<Url> {
   const { data, error } = await supabase
     .from('urls')
     .insert({
@@ -40,7 +40,7 @@ export const createUrl = async (input: {
   return mapRow(data as UrlRow)
 }
 
-export const findByShortCode = async (shortCode: string): Promise<Url | null> => {
+export async function findByShortCode(shortCode: string): Promise<Url | null> {
   const { data, error } = await supabase
     .from('urls')
     .select('original_url, expiration_time')

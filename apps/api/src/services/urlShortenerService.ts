@@ -12,8 +12,22 @@ if (!BASE_SHORT_URL) {
   throw new Error('BASE_SHORT_URL is not defined')
 }
 
-export const createShortUrl = async (input: CreateUrlRequest): Promise<CreateUrlResponse> => {
+export async function createShortUrl(input: CreateUrlRequest): Promise<CreateUrlResponse> {
   const cleanUrl = validateAndNormalizeUrl(input.originalUrl)
+
+  let expirationTime: string | undefined = undefined
+
+  if (input.expirationTime) {
+    const ms = Date.parse(input.expirationTime)
+    if (Number.isNaN(ms)) {
+      throw new ValidationError('expirationTime must be a valid ISO datetime')
+    }
+
+    if (ms <= Date.now()) {
+      throw new ValidationError('expirationTime must be in the future')
+    }
+    expirationTime = new Date(ms).toISOString()
+  }
 
   if (input.alias) {
     if (!isValidAlias(input.alias)) {
@@ -24,7 +38,7 @@ export const createShortUrl = async (input: CreateUrlRequest): Promise<CreateUrl
       await createUrl({
         shortCode: input.alias,
         originalUrl: cleanUrl,
-        expirationTime: input.expirationTime
+        expirationTime: expirationTime
       })
     } catch (err) {
       if (isUniqueViolation(err)) throw new ConflictError('Alias already exists')
@@ -47,7 +61,7 @@ export const createShortUrl = async (input: CreateUrlRequest): Promise<CreateUrl
       await createUrl({
         shortCode: code,
         originalUrl: cleanUrl,
-        expirationTime: input.expirationTime
+        expirationTime: expirationTime
       })
 
       return {

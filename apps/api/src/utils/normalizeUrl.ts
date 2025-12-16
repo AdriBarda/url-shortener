@@ -1,6 +1,6 @@
 import { ValidationError } from '../errors'
 
-export const validateAndNormalizeUrl = (input: string): string => {
+export function validateAndNormalizeUrl(input: string): string {
   const trimmed = input.trim()
   const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
 
