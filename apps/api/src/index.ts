@@ -16,10 +16,8 @@ app.use(cors({ origin: CORS_ORIGIN }))
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
 
-// MOCK: create short url POST /urls -> {shortUrl, shortCode, originalUrl}
 app.use(urlsRouter)
 
-// MOCK: redirect short url GET/:shortCode -> redirect to originalUrl
 app.use(redirectRouter)
 
 app.use(errorHandler)

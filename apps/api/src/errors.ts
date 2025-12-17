@@ -24,3 +24,17 @@ export class ServiceUnavailableError extends AppError {
     super(message, 503)
   }
 }
+
+export class NotFoundError extends AppError {
+  constructor(message = 'Short URL not found') {
+    super(message, 404)
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
+
+export class GoneError extends AppError {
+  constructor(message = 'Short URL has expired') {
+    super(message, 410)
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}
