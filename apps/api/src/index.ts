@@ -4,6 +4,7 @@ import 'dotenv/config'
 import { urlsRouter } from './routes/urls'
 import { redirectRouter } from './routes/redirect'
 import { errorHandler } from './middlewares/errorHandler'
+import { authRouter } from './routes/auth'
 
 const app = express()
 
@@ -12,9 +13,11 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
 
 app.use(express.json())
 
-app.use(cors({ origin: CORS_ORIGIN }))
+app.use(cors({ origin: CORS_ORIGIN, credentials: true }))
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }))
+
+app.use(authRouter)
 
 app.use(urlsRouter)
 

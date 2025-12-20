@@ -9,7 +9,7 @@ const clientSettings: RedisClientOptions = {
   }
 }
 
-export const redis = clientSettings ? createClient(clientSettings) : null
+export const redis = createClient(clientSettings)
 
 if (redis) {
   redis.on('error', (err) => console.error('[redis]', err))

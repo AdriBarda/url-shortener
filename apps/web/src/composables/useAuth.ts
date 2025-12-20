@@ -1,80 +1,45 @@
-import { supabase } from '@/lib/supabase'
-import type { User, Session, Provider } from '@supabase/supabase-js'
 import { computed, ref } from 'vue'
 
-const session = ref<Session | null>(null)
+export type Provider = 'github'
+
+type Me = {
+  userId: string
+  email: string | undefined
+  avatarUrl?: string
+}
+
+const me = ref<Me | null>(null)
 const ready = ref(false)
 let initialised = false
 
+const API = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+
+async function fetchMe(): Promise<Me | null> {
+  const res = await fetch(`${API}/auth/me`, { credentials: 'include' })
+  if (!res.ok) return null
+  return (await res.json()) as Me
+}
+
 export const useAuth = () => {
-  const user = computed<User | null>(() => session.value?.user ?? null)
-  const isAuthed = computed(() => (user.value ? true : false))
+  const user = computed(() => me.value)
+  const isAuthed = computed(() => !!me.value)
 
   const initAuth = async () => {
     if (initialised) return
     initialised = true
-    const { data } = await supabase.auth.getSession()
-    session.value = data.session ?? null
+    me.value = await fetchMe()
     ready.value = true
-
-    supabase.auth.onAuthStateChange((_event, newSession) => {
-      session.value = newSession
-    })
   }
 
-  const signInWithOAuth = async (provider: Provider, next?: string) => {
-    const redirectTo =
-      `${window.location.origin}/auth/callback` + (next ? `?next=${encodeURIComponent(next)}` : '')
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo,
-      },
-    })
-    if (error) throw error
-  }
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
-  }
-
-  const signUp = async (email: string, password: string, next?: string) => {
-    const redirectTo =
-      `${window.location.origin}/auth/callback` + (next ? `?next=${encodeURIComponent(next)}` : '')
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectTo,
-      },
-    })
-    if (error) throw error
-    return data
+  const signInWithOAuth = (provider: Provider, next = '/dashboard') => {
+    if (provider !== 'github') throw new Error('Unsupported provider')
+    window.location.href = `${API}/auth/github/start?next=${encodeURIComponent(next)}`
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' })
+    me.value = null
   }
 
-  const getAccessToken = async (): Promise<string | null> => {
-    const { data } = await supabase.auth.getSession()
-    return data.session?.access_token ?? null
-  }
-
-  return {
-    session,
-    user,
-    ready,
-    isAuthed,
-    initAuth,
-    signInWithOAuth,
-    signIn,
-    signUp,
-    signOut,
-    getAccessToken,
-  }
+  return { user, ready, isAuthed, initAuth, signInWithOAuth, signOut }
 }

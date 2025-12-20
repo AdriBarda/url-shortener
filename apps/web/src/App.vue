@@ -15,15 +15,26 @@ const onSignOut = async () => {
       <RouterLink to="/">Home</RouterLink>
 
       <div v-if="isAuthed" class="flex items-center gap-3">
+        <img
+          v-if="user?.avatarUrl"
+          :src="user.avatarUrl"
+          alt="Avatar"
+          class="size-10 rounded-full border border-green-300"
+        />
         <span class="text-sm text-gray-600">
           {{ user?.email }}
         </span>
-        <button class="text-sm px-3 py-1 rounded border hover:bg-gray-100" @click="onSignOut">
+        <button
+          class="text-sm px-3 py-1 rounded border hover:bg-gray-100 cursor-pointer"
+          @click="onSignOut"
+        >
           Sign out
         </button>
       </div>
 
-      <RouterLink v-else to="/login" class="text-sm"> Login </RouterLink>
+      <button v-else class="text-sm px-3 py-1 rounded border hover:bg-gray-100">
+        <RouterLink to="/login" class="text-sm"> Sign In </RouterLink>
+      </button>
     </nav>
   </header>
 

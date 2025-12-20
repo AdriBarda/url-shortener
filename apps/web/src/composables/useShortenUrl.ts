@@ -1,42 +1,80 @@
-import { createShortUrl } from '@/services/urlApi'
-import type { CreateUrlResponse, CreateUrlRequest } from '@repo/shared'
+import { createShortUrl, ApiError } from '@/services/urlApi'
+import type { CreateUrlRequest, CreateUrlResponse } from '@repo/shared'
 import { ref } from 'vue'
-import { useAuth } from './useAuth'
+import { useRoute, useRouter } from 'vue-router'
+import { setPendingShorten } from '@/utils/pendingShorten'
+
+const datetimeLocalToIso = (value: string): string => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value)
+  if (!match) throw new Error('Invalid expiration date')
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const hour = Number(match[4])
+  const minute = Number(match[5])
+
+  const localDate = new Date(year, month - 1, day, hour, minute, 0, 0)
+  if (Number.isNaN(localDate.getTime())) throw new Error('Invalid expiration date')
+
+  return localDate.toISOString()
+}
+
+const toUiMessage = (err: unknown): string => {
+  if (err instanceof ApiError) {
+    if (err.status === 400) return err.message
+    if (err.status === 401) return 'Your session expired. Please sign in again.'
+    if (err.status === 409) return 'That alias is already taken.'
+    if (err.status >= 500) return 'Server error. Please try again.'
+    return err.message
+  }
+
+  if (err instanceof Error) return err.message
+  return 'Something went wrong. Please try again.'
+}
 
 export const useShortenUrl = () => {
-  const loading = ref(false)
+  const router = useRouter()
+  const route = useRoute()
+
+  const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
   const result = ref<CreateUrlResponse | null>(null)
 
-  const { getAccessToken } = useAuth()
-
-  const submit = async (payload: CreateUrlRequest) => {
+  const submit = async (payload: CreateUrlRequest): Promise<CreateUrlResponse> => {
     loading.value = true
     error.value = null
     result.value = null
+
     try {
-      const payloadCopy = { ...payload }
-
-      payloadCopy.alias = payloadCopy.alias?.trim() || undefined
-      payloadCopy.expirationTime = payloadCopy.expirationTime?.trim() || undefined
-
-      if (payloadCopy.expirationTime) {
-        payloadCopy.expirationTime = new Date(payloadCopy.expirationTime).toISOString()
+      const cleanPayload: CreateUrlRequest = {
+        originalUrl: payload.originalUrl.trim(),
       }
 
-      const token = await getAccessToken()
-      const res = await createShortUrl(payloadCopy, token ?? undefined)
+      if (payload.alias?.trim()) cleanPayload.alias = payload.alias.trim()
+
+      if (payload.expirationTime?.trim()) {
+        cleanPayload.expirationTime = datetimeLocalToIso(payload.expirationTime.trim())
+      }
+
+      const res = await createShortUrl(cleanPayload)
       result.value = res
       return res
-    } catch (e) {
-      error.value = e instanceof Error ? e.message || 'Error' : 'Unknown error'
-      throw e
+    } catch (err: unknown) {
+      error.value = toUiMessage(err)
+
+      if (err instanceof ApiError && err.status === 401) {
+        setPendingShorten(payload)
+        await router.push({ name: 'login', query: { next: route.fullPath || '/' } })
+      }
+
+      throw err
     } finally {
       loading.value = false
     }
   }
 
-  const reset = () => {
+  const reset = (): void => {
     loading.value = false
     error.value = null
     result.value = null
