@@ -12,7 +12,10 @@ if (!BASE_SHORT_URL) {
   throw new Error('BASE_SHORT_URL is not defined')
 }
 
-export async function createShortUrl(input: CreateUrlRequest): Promise<CreateUrlResponse> {
+export async function createShortUrl(
+  input: CreateUrlRequest,
+  userId: string
+): Promise<CreateUrlResponse> {
   const cleanUrl = validateAndNormalizeUrl(input.originalUrl)
 
   let expirationTime: string | undefined = undefined
@@ -38,7 +41,8 @@ export async function createShortUrl(input: CreateUrlRequest): Promise<CreateUrl
       await createUrl({
         shortCode: input.alias,
         originalUrl: cleanUrl,
-        expirationTime: expirationTime
+        expirationTime: expirationTime,
+        userId
       })
     } catch (err) {
       if (isUniqueViolation(err)) throw new ConflictError('Alias already exists')
@@ -61,7 +65,8 @@ export async function createShortUrl(input: CreateUrlRequest): Promise<CreateUrl
       await createUrl({
         shortCode: code,
         originalUrl: cleanUrl,
-        expirationTime: expirationTime
+        expirationTime: expirationTime,
+        userId
       })
 
       return {

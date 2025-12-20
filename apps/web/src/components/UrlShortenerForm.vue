@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { CreateUrlRequest } from '@repo/shared'
 import AdvancedOptions from '@/components/AdvancedOptions.vue'
 import { useShortenUrl } from '@/composables/useShortenUrl'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { clearPendingShorten, getPendingShorten, setPendingShorten } from '@/utils/pendingShorten'
 
+const router = useRouter()
+const route = useRoute()
+const { isAuthed, ready } = useAuth()
 const originalUrl = ref('')
 const showAdvancedOptions = ref(false)
 const urlAlias = ref('')
@@ -25,13 +31,22 @@ const canSubmit = computed(
 )
 
 const onSubmit = async () => {
-  reset()
   const payload: CreateUrlRequest = {
     originalUrl: originalUrl.value.trim(),
     alias: urlAlias.value,
     expirationTime: expirationTime.value,
   }
 
+  if (!isAuthed.value) {
+    setPendingShorten(payload)
+    await router.push({
+      name: 'login',
+      query: { next: route.fullPath || '/' },
+    })
+    return
+  }
+
+  reset()
   await submit(payload)
 
   showAdvancedOptions.value = false
@@ -46,6 +61,26 @@ const handleUpdateAlias = (alias: string) => {
 const handleUpdateExpirationTime = (expTime: string) => {
   expirationTime.value = expTime
 }
+
+watch(
+  [ready, isAuthed],
+  async ([r, authed]) => {
+    if (!r || !authed) return
+
+    const pending = getPendingShorten()
+    if (!pending) return
+
+    clearPendingShorten()
+
+    reset()
+    await submit(pending)
+
+    showAdvancedOptions.value = false
+    urlAlias.value = ''
+    expirationTime.value = ''
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

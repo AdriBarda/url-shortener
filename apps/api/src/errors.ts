@@ -25,6 +25,12 @@ export class ServiceUnavailableError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message = 'Unauthorized') {
+    super(message, 401)
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message = 'Short URL not found') {
     super(message, 404)

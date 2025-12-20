@@ -9,21 +9,34 @@ type UrlRow = {
   user_id: string | null
 }
 
-const mapRow = (row: UrlRow): Url => {
-  return {
-    shortCode: row.short_code,
-    originalUrl: row.original_url,
-    createdAt: row.created_at,
-    expirationTime: row.expiration_time ?? undefined,
-    userId: row.user_id ?? undefined
-  }
+type RedirectRow = {
+  original_url: string
+  expiration_time: string | null
 }
+
+export type RedirectUrl = {
+  originalUrl: string
+  expirationTime?: string
+}
+
+const mapUrlRow = (row: UrlRow): Url => ({
+  shortCode: row.short_code,
+  originalUrl: row.original_url,
+  createdAt: row.created_at,
+  expirationTime: row.expiration_time ?? undefined,
+  userId: row.user_id ?? undefined
+})
+
+const mapRedirectRow = (row: RedirectRow): RedirectUrl => ({
+  originalUrl: row.original_url,
+  expirationTime: row.expiration_time ?? undefined
+})
 
 export async function createUrl(input: {
   shortCode: string
   originalUrl: string
   expirationTime?: string
-  userId?: string
+  userId: string
 }): Promise<Url> {
   const { data, error } = await supabase
     .from('urls')
@@ -31,16 +44,16 @@ export async function createUrl(input: {
       short_code: input.shortCode,
       original_url: input.originalUrl,
       expiration_time: input.expirationTime ?? null,
-      user_id: input.userId ?? null
+      user_id: input.userId
     })
-    .select()
+    .select('short_code, original_url, created_at, expiration_time, user_id')
     .single()
 
   if (error) throw error
-  return mapRow(data as UrlRow)
+  return mapUrlRow(data)
 }
 
-export async function findByShortCode(shortCode: string): Promise<Url | null> {
+export async function findByShortCode(shortCode: string): Promise<RedirectUrl | null> {
   const { data, error } = await supabase
     .from('urls')
     .select('original_url, expiration_time')
@@ -49,5 +62,5 @@ export async function findByShortCode(shortCode: string): Promise<Url | null> {
 
   if (error) throw error
   if (!data) return null
-  return mapRow(data as UrlRow)
+  return mapRedirectRow(data)
 }

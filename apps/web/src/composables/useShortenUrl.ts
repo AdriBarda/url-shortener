@@ -1,11 +1,14 @@
 import { createShortUrl } from '@/services/urlApi'
 import type { CreateUrlResponse, CreateUrlRequest } from '@repo/shared'
 import { ref } from 'vue'
+import { useAuth } from './useAuth'
 
 export const useShortenUrl = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const result = ref<CreateUrlResponse | null>(null)
+
+  const { getAccessToken } = useAuth()
 
   const submit = async (payload: CreateUrlRequest) => {
     loading.value = true
@@ -21,7 +24,8 @@ export const useShortenUrl = () => {
         payloadCopy.expirationTime = new Date(payloadCopy.expirationTime).toISOString()
       }
 
-      const res = await createShortUrl(payloadCopy)
+      const token = await getAccessToken()
+      const res = await createShortUrl(payloadCopy, token ?? undefined)
       result.value = res
       return res
     } catch (e) {

@@ -2,10 +2,16 @@ import type { CreateUrlRequest, CreateUrlResponse } from '@repo/shared'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
-export async function createShortUrl(payload: CreateUrlRequest): Promise<CreateUrlResponse> {
+export async function createShortUrl(
+  payload: CreateUrlRequest,
+  accessToken?: string,
+): Promise<CreateUrlResponse> {
   const res = await fetch(`${API_BASE}/urls`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: JSON.stringify(payload),
   })
 
