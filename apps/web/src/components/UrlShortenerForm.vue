@@ -47,7 +47,20 @@ const onSubmit = async () => {
   }
 
   reset()
-  await submit(payload)
+
+  try {
+    const outcome = await submit(payload)
+    if (!outcome.ok && outcome.reason === 'unauthorized') {
+      setPendingShorten(payload)
+      await router.push({
+        name: 'login',
+        query: { next: route.fullPath || '/' },
+      })
+      return
+    }
+  } catch {
+    return
+  }
 
   showAdvancedOptions.value = false
   urlAlias.value = ''
@@ -73,7 +86,19 @@ watch(
     clearPendingShorten()
 
     reset()
-    await submit(pending)
+    try {
+      const outcome = await submit(pending)
+      if (!outcome.ok && outcome.reason === 'unauthorized') {
+        setPendingShorten(pending)
+        await router.push({
+          name: 'login',
+          query: { next: route.fullPath || '/' },
+        })
+        return
+      }
+    } catch {
+      return
+    }
 
     showAdvancedOptions.value = false
     urlAlias.value = ''

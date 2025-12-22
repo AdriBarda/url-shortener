@@ -1,8 +1,6 @@
 import { createShortUrl, ApiError } from '@/services/urlApi'
 import type { CreateUrlRequest, CreateUrlResponse } from '@repo/shared'
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { setPendingShorten } from '@/utils/pendingShorten'
 
 const datetimeLocalToIso = (value: string): string => {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value)
@@ -33,15 +31,16 @@ const toUiMessage = (err: unknown): string => {
   return 'Something went wrong. Please try again.'
 }
 
-export const useShortenUrl = () => {
-  const router = useRouter()
-  const route = useRoute()
+type SubmitResult =
+  | { ok: true; data: CreateUrlResponse }
+  | { ok: false; reason: 'unauthorized' }
 
+export const useShortenUrl = () => {
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
   const result = ref<CreateUrlResponse | null>(null)
 
-  const submit = async (payload: CreateUrlRequest): Promise<CreateUrlResponse> => {
+  const submit = async (payload: CreateUrlRequest): Promise<SubmitResult> => {
     loading.value = true
     error.value = null
     result.value = null
@@ -59,13 +58,12 @@ export const useShortenUrl = () => {
 
       const res = await createShortUrl(cleanPayload)
       result.value = res
-      return res
+      return { ok: true, data: res }
     } catch (err: unknown) {
       error.value = toUiMessage(err)
 
       if (err instanceof ApiError && err.status === 401) {
-        setPendingShorten(payload)
-        await router.push({ name: 'login', query: { next: route.fullPath || '/' } })
+        return { ok: false, reason: 'unauthorized' }
       }
 
       throw err
