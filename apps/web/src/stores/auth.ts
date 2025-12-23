@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { defineStore } from 'pinia'
 
 export type Provider = 'github'
 
@@ -8,10 +9,6 @@ type Me = {
   avatarUrl?: string
 }
 
-const me = ref<Me | null>(null)
-const ready = ref(false)
-let initialised = false
-
 const API = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
 async function fetchMe(): Promise<Me | null> {
@@ -20,15 +17,25 @@ async function fetchMe(): Promise<Me | null> {
   return (await res.json()) as Me
 }
 
-export const useAuth = () => {
+export const useAuthStore = defineStore('auth', () => {
+  const me = ref<Me | null>(null)
+  const ready = ref(false)
+  const initialised = ref(false)
+
   const user = computed(() => me.value)
   const isAuthed = computed(() => !!me.value)
 
   const initAuth = async () => {
-    if (initialised) return
-    initialised = true
-    me.value = await fetchMe()
-    ready.value = true
+    if (initialised.value) return
+    initialised.value = true
+    try {
+      me.value = await fetchMe()
+    } catch (error) {
+      console.error('Failed to fetch auth state', error)
+      me.value = null
+    } finally {
+      ready.value = true
+    }
   }
 
   const signInWithOAuth = (provider: Provider, next = '/dashboard') => {
@@ -42,4 +49,4 @@ export const useAuth = () => {
   }
 
   return { user, ready, isAuthed, initAuth, signInWithOAuth, signOut }
-}
+})

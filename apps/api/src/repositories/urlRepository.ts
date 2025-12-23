@@ -1,4 +1,4 @@
-import type { Url } from '@repo/shared'
+import type { Url, UrlListItem } from '@repo/shared'
 import { supabase } from '../db/supabaseClient'
 
 type UrlRow = {
@@ -63,4 +63,26 @@ export async function findByShortCode(shortCode: string): Promise<RedirectUrl | 
   if (error) throw error
   if (!data) return null
   return mapRedirectRow(data)
+}
+
+export async function findByUserId(
+  userId: string,
+  opts?: { limit?: number }
+): Promise<UrlListItem[]> {
+  const limit = opts?.limit ?? 100
+  const { data, error } = await supabase
+    .from('urls')
+    .select('short_code, original_url, expiration_time, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+
+  return (data ?? []).map((r) => ({
+    shortCode: r.short_code,
+    originalUrl: r.original_url,
+    expirationTime: r.expiration_time,
+    createdAt: r.created_at
+  })) as UrlListItem[]
 }

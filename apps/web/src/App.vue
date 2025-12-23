@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
-const { user, isAuthed, signOut } = useAuth()
+const authStore = useAuthStore()
+const { user, isAuthed } = storeToRefs(authStore)
 
 const onSignOut = async () => {
-  await signOut()
+  await authStore.signOut()
 }
 </script>
 

@@ -17,3 +17,10 @@ export type Url = {
   expirationTime?: string
   userId?: string
 }
+
+export type UrlListItem = {
+  shortCode: string
+  originalUrl: string
+  expirationTime: string | null
+  createdAt: string
+}

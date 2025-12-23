@@ -1,9 +1,9 @@
-import type { CreateUrlRequest, CreateUrlResponse } from '@repo/shared'
+import type { CreateUrlRequest, CreateUrlResponse, UrlListItem } from '@repo/shared'
 import { validateAndNormalizeUrl } from '../utils/normalizeUrl'
 import { isValidAlias } from '../utils/alias'
 import { ConflictError, ServiceUnavailableError, ValidationError } from '../errors'
 import { genCode } from '../utils/shortCode'
-import { createUrl } from '../repositories/urlRepository'
+import { createUrl, findByUserId } from '../repositories/urlRepository'
 import { isUniqueViolation } from '../db/isUniqueViolation'
 
 const BASE_SHORT_URL = process.env.BASE_SHORT_URL
@@ -81,4 +81,8 @@ export async function createShortUrl(
   }
 
   throw new ServiceUnavailableError('Could not generate unique short code')
+}
+
+export async function getUserUrls(userId: string): Promise<UrlListItem[]> {
+  return findByUserId(userId, { limit: 100 })
 }

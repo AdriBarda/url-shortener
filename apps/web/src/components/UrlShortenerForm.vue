@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import type { CreateUrlRequest } from '@repo/shared'
 import AdvancedOptions from '@/components/AdvancedOptions.vue'
 import { useShortenUrl } from '@/composables/useShortenUrl'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
 import { clearPendingShorten, getPendingShorten, setPendingShorten } from '@/utils/pendingShorten'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
-const { isAuthed, ready } = useAuth()
+const authStore = useAuthStore()
+const { isAuthed, ready } = storeToRefs(authStore)
 const originalUrl = ref('')
 const showAdvancedOptions = ref(false)
 const urlAlias = ref('')

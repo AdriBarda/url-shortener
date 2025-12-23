@@ -6,14 +6,6 @@ import { getSession, setSession, deleteSession } from '../repositories/sessionRe
 import { SID_COOKIE, SID_TTL_SECONDS } from '../config/session'
 import { decrypt, encrypt } from '../utils/crypto'
 
-declare global {
-  namespace Express {
-    interface Request {
-      auth?: { userId: string }
-    }
-  }
-}
-
 const nowSec = (): number => Math.floor(Date.now() / 1000)
 
 const REFRESH_SKEW_SECONDS = 60

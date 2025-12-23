@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
-const { signInWithOAuth } = useAuth()
+const authStore = useAuthStore()
 
 const next = (route.query.next as string) || '/dashboard'
 
@@ -15,7 +15,7 @@ const onGitHub = () => {
   errorMsg.value = null
   loading.value = true
   try {
-    signInWithOAuth('github', next)
+    authStore.signInWithOAuth('github', next)
   } catch (err: unknown) {
     errorMsg.value = err instanceof Error ? err.message : 'GitHub login failed'
     loading.value = false
