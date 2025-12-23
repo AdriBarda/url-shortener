@@ -136,7 +136,7 @@ watch(
       {{ loading ? '...' : 'Shorten' }}
     </button>
 
-    <p v-if="result?.shortUrl" class="mt-3 text-green-500">
+    <p v-if="result?.shortUrl" class="not-prose mt-3 text-green-500">
       Short URL: <a :href="result.shortUrl" target="_blank">{{ result.shortUrl }}</a>
     </p>
 

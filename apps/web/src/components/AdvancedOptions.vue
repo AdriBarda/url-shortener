@@ -65,9 +65,11 @@ const toggle = () => {
     </div>
 
     <div class="flex gap-2">
-      <span class="px-2 py-2 text-sm text-gray-400 bg-gray-200 border border-gray-200 rounded">
+      <div
+        class="inline-flex items-center justify-center px-2 py-2 text-sm text-gray-400 bg-gray-200 border border-gray-200 rounded"
+      >
         {{ shortBaseUrl }}/
-      </span>
+      </div>
       <input
         :value="alias"
         @blur="emit('update:alias', ($event.target as HTMLInputElement).value)"
