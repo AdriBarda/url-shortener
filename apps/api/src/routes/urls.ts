@@ -14,10 +14,10 @@ urlsRouter.post('/urls', requireAuthSid, async (req, res, next) => {
   }
 })
 
-urlsRouter.get('/me', requireAuthSid, async (req, res, next) => {
+urlsRouter.get('/urls', requireAuthSid, async (req, res, next) => {
   try {
     const result = await findByUserId(req.auth!.userId)
-    return res.status(201).json(result)
+    return res.status(200).json(result)
   } catch (err) {
     return next(err)
   }

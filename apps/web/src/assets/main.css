@@ -1,13 +1,33 @@
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+@plugin "@midudev/tailwind-animations";
 
-#app {
-  margin: 0;
-  font-weight: normal;
-  height: 100dvh;
+@layer base {
+  #app {
+    @apply m-0 font-normal;
+    height: 100dvh;
+  }
+
+  body {
+    @apply font-mono min-h-screen;
+    background-color: oklch(96.7% 0.003 264.542);
+  }
 }
 
-body {
-  font-family: monospace;
-  min-height: 100dvh;
-  background-color: oklch(96.7% 0.003 264.542);
+@layer components {
+  .app-prose {
+    @apply prose prose-slate max-w-none font-mono;
+  }
+
+  .app-prose :where(a) {
+    @apply no-underline;
+  }
+
+  .app-prose :where(ul, ol) {
+    @apply list-none pl-0 ml-0;
+  }
+
+  .app-prose :where(table) {
+    @apply table w-full border-collapse m-0;
+  }
 }

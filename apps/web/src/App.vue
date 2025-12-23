@@ -1,46 +1,37 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView, useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import AppNavbar from '@/components/AppNavbar.vue'
 
 const authStore = useAuthStore()
 const { user, isAuthed } = storeToRefs(authStore)
+const router = useRouter()
+const route = useRoute()
 
 const onSignOut = async () => {
   await authStore.signOut()
+  await router.push('/')
 }
+
+const mainClasses = computed(() => [
+  'min-h-screen pt-20 pb-12',
+  route.name === 'about' ? '' : 'flex justify-center items-center',
+])
 </script>
 
 <template>
-  <header class="fixed w-full">
-    <nav class="bg-white p-4 shadow flex justify-between items-center">
-      <RouterLink to="/">Home</RouterLink>
+  <div class="app-prose min-h-screen">
+    <AppNavbar :user="user" :is-authed="isAuthed" @sign-out="onSignOut" />
 
-      <div v-if="isAuthed" class="flex items-center gap-3">
-        <img
-          v-if="user?.avatarUrl"
-          :src="user.avatarUrl"
-          alt="Avatar"
-          class="size-10 rounded-full border border-green-300"
-        />
-        <span class="text-sm text-gray-600">
-          {{ user?.email }}
-        </span>
-        <button
-          class="text-sm px-3 py-1 rounded border hover:bg-gray-100 cursor-pointer"
-          @click="onSignOut"
-        >
-          Sign out
-        </button>
-      </div>
-
-      <button v-else class="text-sm px-3 py-1 rounded border hover:bg-gray-100">
-        <RouterLink to="/login" class="text-sm"> Sign In </RouterLink>
-      </button>
-    </nav>
-  </header>
-
-  <main class="flex justify-center items-center min-h-full">
-    <RouterView />
-  </main>
+    <main :class="mainClasses">
+      <Suspense>
+        <RouterView />
+        <template #fallback>
+          <div class="text-sm text-gray-600">Loading…</div>
+        </template>
+      </Suspense>
+    </main>
+  </div>
 </template>
