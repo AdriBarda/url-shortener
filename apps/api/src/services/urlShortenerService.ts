@@ -12,6 +12,20 @@ if (!BASE_SHORT_URL) {
   throw new Error('BASE_SHORT_URL is not defined')
 }
 
+function parseExpiration(value: string): number {
+  const hasZone = /[zZ]|[+-]\d\d:?\d\d$/.test(value)
+  if (!hasZone) {
+    throw new ValidationError('expirationTime must include a timezone (offset or Z)')
+  }
+
+  const ms = Date.parse(value)
+  if (Number.isNaN(ms)) {
+    throw new ValidationError('expirationTime must be a valid ISO datetime')
+  }
+
+  return ms
+}
+
 export async function createShortUrl(
   input: CreateUrlRequest,
   userId: string
@@ -21,10 +35,7 @@ export async function createShortUrl(
   let expirationTime: string | undefined = undefined
 
   if (input.expirationTime) {
-    const ms = Date.parse(input.expirationTime)
-    if (Number.isNaN(ms)) {
-      throw new ValidationError('expirationTime must be a valid ISO datetime')
-    }
+    const ms = parseExpiration(input.expirationTime)
 
     if (ms <= Date.now()) {
       throw new ValidationError('expirationTime must be in the future')

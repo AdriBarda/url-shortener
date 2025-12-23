@@ -19,6 +19,7 @@
     "@midudev/tailwind-animations": "^0.2.0",
     "@repo/shared": "workspace:^",
     "@tailwindcss/vite": "^4.1.18",
+    "dayjs": "^1.11.19",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.1.18",
     "vue": "^3.5.25",

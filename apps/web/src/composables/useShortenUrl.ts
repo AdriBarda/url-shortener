@@ -1,21 +1,27 @@
 import { createShortUrl, ApiError } from '@/services/urlApi'
 import type { CreateUrlRequest, CreateUrlResponse } from '@repo/shared'
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { ref } from 'vue'
 
-const datetimeLocalToIso = (value: string): string => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value)
-  if (!match) throw new Error('Invalid expiration date')
+dayjs.extend(customParseFormat)
 
-  const year = Number(match[1])
-  const month = Number(match[2])
-  const day = Number(match[3])
-  const hour = Number(match[4])
-  const minute = Number(match[5])
+const normalizeExpiration = (value?: string): string | undefined => {
+  if (!value || !value.trim()) return undefined
 
-  const localDate = new Date(year, month - 1, day, hour, minute, 0, 0)
-  if (Number.isNaN(localDate.getTime())) throw new Error('Invalid expiration date')
+  const trimmed = value.trim()
+  const hasZone = /[zZ]|[+-]\d\d:?\d\d$/.test(trimmed)
 
-  return localDate.toISOString()
+  if (hasZone) {
+    const parsed = dayjs(trimmed)
+    if (!parsed.isValid()) throw new Error('Invalid expiration date')
+    return parsed.toISOString()
+  }
+
+  const parsed = dayjs(trimmed, ['YYYY-MM-DDTHH:mm', 'YYYY-MM-DDTHH:mm:ss'], true)
+  if (!parsed.isValid()) throw new Error('Invalid expiration date')
+
+  return parsed.toISOString()
 }
 
 const toUiMessage = (err: unknown): string => {
@@ -53,7 +59,7 @@ export const useShortenUrl = () => {
       if (payload.alias?.trim()) cleanPayload.alias = payload.alias.trim()
 
       if (payload.expirationTime?.trim()) {
-        cleanPayload.expirationTime = datetimeLocalToIso(payload.expirationTime.trim())
+        cleanPayload.expirationTime = normalizeExpiration(payload.expirationTime)
       }
 
       const res = await createShortUrl(cleanPayload)

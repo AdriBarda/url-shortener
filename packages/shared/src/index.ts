@@ -1,7 +1,7 @@
 export type CreateUrlRequest = {
   originalUrl: string
   alias?: string
-  expirationTime?: string // ISO string
+  expirationTime?: string // ISO string with timezone
 }
 
 export type CreateUrlResponse = {
