@@ -1,4 +1,6 @@
 import type { CreateUrlRequest, CreateUrlResponse, UrlListItem } from '@repo/shared'
+import { createUrlRequestSchema } from '@repo/shared'
+import { ZodError } from 'zod'
 import { validateAndNormalizeUrl } from '../utils/normalizeUrl'
 import { isValidAlias } from '../utils/alias'
 import { ConflictError, ServiceUnavailableError, ValidationError } from '../errors'
@@ -30,12 +32,24 @@ export async function createShortUrl(
   input: CreateUrlRequest,
   userId: string
 ): Promise<CreateUrlResponse> {
-  const cleanUrl = validateAndNormalizeUrl(input.originalUrl)
+  let parsedInput: CreateUrlRequest
+  try {
+    parsedInput = createUrlRequestSchema.parse(input)
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const message = err.issues[0]?.message ?? 'Invalid input'
+      throw new ValidationError(message)
+    }
+    throw err
+  }
+  const { originalUrl, alias, expirationTime: requestedExpiration } = parsedInput
+
+  const cleanUrl = validateAndNormalizeUrl(originalUrl)
 
   let expirationTime: string | undefined = undefined
 
-  if (input.expirationTime) {
-    const ms = parseExpiration(input.expirationTime)
+  if (requestedExpiration) {
+    const ms = parseExpiration(requestedExpiration)
 
     if (ms <= Date.now()) {
       throw new ValidationError('expirationTime must be in the future')
@@ -43,14 +57,14 @@ export async function createShortUrl(
     expirationTime = new Date(ms).toISOString()
   }
 
-  if (input.alias) {
-    if (!isValidAlias(input.alias)) {
+  if (alias) {
+    if (!isValidAlias(alias)) {
       throw new ValidationError('alias is invalid')
     }
 
     try {
       await createUrl({
-        shortCode: input.alias,
+        shortCode: alias,
         originalUrl: cleanUrl,
         expirationTime: expirationTime,
         userId
@@ -61,8 +75,8 @@ export async function createShortUrl(
     }
 
     return {
-      shortUrl: `${BASE_SHORT_URL}/${input.alias}`,
-      shortCode: input.alias,
+      shortUrl: `${BASE_SHORT_URL}/${alias}`,
+      shortCode: alias,
       originalUrl: cleanUrl
     }
   }

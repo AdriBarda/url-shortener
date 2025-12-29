@@ -106,6 +106,7 @@ const retryPendingShorten = async () => {
 const processPendingShorten = async () => {
   const pending = getPendingShorten()
   if (!pending) return
+  clearPendingShorten()
   await runPendingShorten(pending)
 }
 
