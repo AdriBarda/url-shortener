@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 type User = {
   email?: string | null
   avatarUrl?: string | null
 } | null
 
-defineProps<{
+const props = defineProps<{
   user: User
   isAuthed: boolean
 }>()
@@ -19,6 +19,8 @@ const emit = defineEmits<{
 const isUserMenuVisible = ref(false)
 const isMenuVisible = ref(false)
 const rootEl = ref<HTMLElement | null>(null)
+const user = computed(() => props.user)
+const isAuthed = computed(() => props.isAuthed)
 
 const closeMenus = () => {
   isUserMenuVisible.value = false
@@ -83,7 +85,7 @@ onBeforeUnmount(() => {
           <button
             v-if="isAuthed"
             type="button"
-            class="flex text-sm bg-neutral-primary rounded-full md:me-0 focus:ring-3 focus:ring-green-300"
+            class="flex text-sm bg-neutral-primary rounded-full md:me-0 focus:ring-3 focus:ring-green-300 cursor-pointer"
             id="user-menu-button"
             aria-expanded="false"
             @click="toggleUserMenu"
@@ -95,6 +97,12 @@ onBeforeUnmount(() => {
               :src="user?.avatarUrl"
               alt="user photo"
             />
+            <div
+              v-else
+              class="p-5 flex justify-center items-center size-10 rounded-full bg-purple-100 font-semibold text-lg"
+            >
+              U
+            </div>
           </button>
 
           <RouterLink

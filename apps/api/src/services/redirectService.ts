@@ -13,7 +13,11 @@ function devLog(message: string) {
 
 function expirationMs(expirationTime?: string): number | null {
   if (!expirationTime) return null
-  const ms = Date.parse(expirationTime)
+
+  const hasZone = /[zZ]|[+-]\d\d:?\d\d$/.test(expirationTime)
+  const value = hasZone ? expirationTime : `${expirationTime}Z`
+
+  const ms = Date.parse(value)
   return Number.isNaN(ms) ? null : ms
 }
 
@@ -32,6 +36,13 @@ function ttlSeconds(expirationTime?: string): number {
   return Math.min(MAX_TTL_SECONDS, Math.floor(msLeft / 1000))
 }
 
+function describeExpiration(label: string, expirationTime?: string) {
+  const ms = expirationMs(expirationTime)
+  devLog(
+    `[expire] ${label} raw=${expirationTime ?? 'null'} parsed=${ms ?? 'null'} now=${Date.now()}`
+  )
+}
+
 export async function getRedirectLocation(shortCode: string): Promise<string> {
   const c0 = process.hrtime.bigint()
   const cached = await cacheGet(shortCode)
@@ -39,6 +50,7 @@ export async function getRedirectLocation(shortCode: string): Promise<string> {
 
   if (cached) {
     devLog(`[cache] HIT ${shortCode} (${Number(c1 - c0) / 1e6}ms)`)
+    describeExpiration('cache', cached.expirationTime)
     if (isExpired(cached.expirationTime)) throw new GoneError()
     return cached.originalUrl
   }
@@ -51,6 +63,7 @@ export async function getRedirectLocation(shortCode: string): Promise<string> {
   devLog(`DB lookup ms: ${Number(t1 - t0) / 1e6}`)
 
   if (!url) throw new NotFoundError()
+  describeExpiration('db', url.expirationTime)
   if (isExpired(url.expirationTime)) throw new GoneError()
 
   const ttl = ttlSeconds(url.expirationTime)

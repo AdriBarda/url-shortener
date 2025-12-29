@@ -6,7 +6,6 @@ import { setSession, getSession, deleteSession } from '../repositories/sessionRe
 import { SID_COOKIE, SID_TTL_SECONDS, sidCookieOptions } from '../config/session'
 import { ValidationError, UnauthorizedError, ServiceUnavailableError } from '../errors'
 import { encrypt, decrypt } from '../utils/crypto'
-import { supabaseAdmin } from '../utils/supabaseAdmin'
 import { createClient } from '@supabase/supabase-js'
 
 function safeNext(next: unknown) {
@@ -163,5 +162,7 @@ export async function logout(req: Request, res: Response) {
         }
       })
     }
-  } catch {}
+  } catch {
+    // Local session has already been cleared. Best-effort Supabase logout.
+  }
 }

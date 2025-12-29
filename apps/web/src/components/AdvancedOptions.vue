@@ -6,6 +6,8 @@ const props = defineProps<{
   shortBaseUrl: string
   alias: string
   expirationTime: string
+  aliasError?: string | null
+  expirationError?: string | null
 }>()
 
 const localExpirationTime = ref(props.expirationTime)
@@ -23,19 +25,18 @@ const emit = defineEmits<{
   'update:expirationTime': [v: string]
 }>()
 
-const aliasError = computed(() => {
-  const value = props.alias.trim()
-  if (!value) return null
-  if (!/^[a-zA-Z0-9_-]{5,32}$/.test(value)) {
-    return 'Use 5-32 caracteres (letters, numbers, "-" o "_").'
-  }
-  return null
-})
+const aliasError = computed(() => props.aliasError ?? null)
 
 const aliasPreview = computed(() => {
   const value = props.alias.trim() || 'your-alias'
   return `${props.shortBaseUrl}/${value}`
 })
+
+const handleExpirationInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value
+  localExpirationTime.value = value
+  emit('update:expirationTime', value)
+}
 
 const toggle = () => {
   emit('update:modelValue', !props.modelValue)
@@ -72,9 +73,12 @@ const toggle = () => {
       </div>
       <input
         :value="alias"
-        @blur="emit('update:alias', ($event.target as HTMLInputElement).value)"
+        @input="emit('update:alias', ($event.target as HTMLInputElement).value)"
         placeholder="my-custom-alias"
-        class="flex-1 p-2 bg-white border border-gray-200 rounded focus:outline-green-300 focus:border-green-400"
+        :class="[
+          'flex-1 p-2 bg-white border rounded focus:outline-green-300 focus:border-green-400',
+          aliasError ? 'border-red-400 focus:border-red-500 focus:outline-red-200' : 'border-gray-200',
+        ]"
         minlength="5"
         maxlength="32"
       />
@@ -92,10 +96,13 @@ const toggle = () => {
       <input
         type="datetime-local"
         :value="localExpirationTime"
-        @input="localExpirationTime = ($event.target as HTMLInputElement).value"
-        @blur="emit('update:expirationTime', localExpirationTime)"
-        class="w-full p-2 bg-white border border-gray-200 rounded focus:outline-green-300 focus:border-green-400"
+        @input="handleExpirationInput"
+        :class="[
+          'w-full p-2 bg-white border rounded focus:outline-green-300 focus:border-green-400',
+          expirationError ? 'border-red-400 focus:border-red-500 focus:outline-red-200' : 'border-gray-200',
+        ]"
       />
+      <p v-if="expirationError" class="text-xs text-red-500 mt-1">{{ expirationError }}</p>
     </div>
   </div>
 </template>
