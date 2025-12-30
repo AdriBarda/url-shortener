@@ -38,6 +38,7 @@ export async function createUrl(input: {
   expirationTime?: string
   userId: string
 }): Promise<Url> {
+  const startMs = Date.now()
   const { data, error } = await supabase
     .from('urls')
     .insert({
@@ -50,10 +51,14 @@ export async function createUrl(input: {
     .single()
 
   if (error) throw error
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[timing] supabase insert url', { ms: Date.now() - startMs })
+  }
   return mapUrlRow(data)
 }
 
 export async function findByShortCode(shortCode: string): Promise<RedirectUrl | null> {
+  const startMs = Date.now()
   const { data, error } = await supabase
     .from('urls')
     .select('original_url, expiration_time')
@@ -62,6 +67,9 @@ export async function findByShortCode(shortCode: string): Promise<RedirectUrl | 
 
   if (error) throw error
   if (!data) return null
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[timing] supabase find by short code', { ms: Date.now() - startMs })
+  }
   return mapRedirectRow(data)
 }
 
@@ -70,6 +78,7 @@ export async function findByUserId(
   opts?: { limit?: number }
 ): Promise<UrlListItem[]> {
   const limit = opts?.limit ?? 100
+  const startMs = Date.now()
   const { data, error } = await supabase
     .from('urls')
     .select('short_code, original_url, expiration_time, created_at')
@@ -78,6 +87,12 @@ export async function findByUserId(
     .limit(limit)
 
   if (error) throw error
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[timing] supabase find by user', {
+      ms: Date.now() - startMs,
+      rows: data?.length ?? 0
+    })
+  }
 
   return (data ?? []).map((r) => ({
     shortCode: r.short_code,

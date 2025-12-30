@@ -14,12 +14,15 @@ import { scheduleSessionRefresh } from '../services/sessionRefreshService'
 const nowSec = (): number => Math.floor(Date.now() / 1000)
 
 export const requireAuthSid = async (req: Request, res: Response, next: NextFunction) => {
+  const startMs = Date.now()
   try {
     const parsed = cookie.parse(req.headers.cookie ?? '')
     const sid = parsed[SID_COOKIE]
     if (!sid) return next(new UnauthorizedError())
 
+    const sessionStartMs = Date.now()
     const record = await getSession(sid)
+    const sessionMs = Date.now() - sessionStartMs
     if (!record) return next(new UnauthorizedError())
 
     const now = nowSec()
@@ -40,6 +43,14 @@ export const requireAuthSid = async (req: Request, res: Response, next: NextFunc
     }
 
     req.auth = { userId: record.userId }
+    const totalMs = Date.now() - startMs
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[timing] auth middleware', {
+        path: req.path,
+        totalMs,
+        sessionMs
+      })
+    }
     return next()
   } catch {
     return next(new ServiceUnavailableError('Session store unavailable'))

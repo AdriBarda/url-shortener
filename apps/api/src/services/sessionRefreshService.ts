@@ -17,7 +17,9 @@ export async function scheduleSessionRefresh(sid: string, record: SessionRecord)
   const lock = await redis.set(refreshLockKey(sid), '1', { NX: true, EX: 60 })
   if (!lock) return false
 
-  console.log('[auth] session refresh scheduled', { sid, expiresAt: record.expiresAt })
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[auth] session refresh scheduled', { expiresAt: record.expiresAt })
+  }
 
   setImmediate(async () => {
     try {
@@ -57,7 +59,9 @@ export async function scheduleSessionRefresh(sid: string, record: SessionRecord)
       }
 
       await setSession(sid, updated, SID_TTL_SECONDS)
-      console.log('[auth] session refresh completed', { sid, expiresAt: session.expires_at })
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[auth] session refresh completed', { expiresAt: session.expires_at })
+      }
     } finally {
       await redis.del(refreshLockKey(sid))
     }
