@@ -3,10 +3,20 @@ import crypto from 'crypto'
 import cookie from 'cookie'
 import { createSsrSupabaseClient } from '../utils/supabaseSsr'
 import { setSession, getSession, deleteSession } from '../repositories/sessionRepository'
-import { MAX_SESSION_AGE_SECONDS, SID_COOKIE, SID_TTL_SECONDS, sidCookieOptions } from '../config/session'
+import {
+  MAX_SESSION_AGE_SECONDS,
+  REFRESH_COOLDOWN_SECONDS,
+  REFRESH_WINDOW_SECONDS,
+  SID_COOKIE,
+  SID_TTL_SECONDS,
+  sidCookieOptions
+} from '../config/session'
 import { ValidationError, UnauthorizedError, ServiceUnavailableError } from '../errors'
 import { encrypt, decrypt } from '../utils/crypto'
 import { createClient } from '@supabase/supabase-js'
+import { scheduleSessionRefresh } from './sessionRefreshService'
+
+const nowSec = (): number => Math.floor(Date.now() / 1000)
 
 function safeNext(next: unknown) {
   if (typeof next !== 'string') return '/dashboard'
@@ -67,7 +77,7 @@ export const handleOAuthCallback = async (args: {
   }
 
   const sid = crypto.randomUUID()
-  const now = Math.floor(Date.now() / 1000)
+  const now = nowSec()
 
   if (!session.refresh_token || !session.expires_at) {
     throw new ServiceUnavailableError('Missing session tokens from auth provider')
@@ -85,7 +95,8 @@ export const handleOAuthCallback = async (args: {
         refreshToken: refreshTokenEnc,
         expiresAt: session.expires_at,
         createdAt: now,
-        lastSeenAt: now
+        lastSeenAt: now,
+        lastRefreshAt: now
       },
       SID_TTL_SECONDS
     )
@@ -101,7 +112,9 @@ export const handleOAuthCallback = async (args: {
   return next
 }
 
-export async function getMe(req: Request) {
+export async function getMe(req: Request): Promise<{
+  me: { userId: string; email?: string; avatarUrl?: string }
+}> {
   const parsed = cookie.parse(req.headers.cookie ?? '')
   const sid = parsed[SID_COOKIE]
   if (!sid) {
@@ -112,12 +125,22 @@ export async function getMe(req: Request) {
   if (!record) {
     throw new UnauthorizedError()
   }
-  if (Math.floor(Date.now() / 1000) - record.createdAt > MAX_SESSION_AGE_SECONDS) {
+  const now = nowSec()
+  if (now - record.createdAt > MAX_SESSION_AGE_SECONDS) {
     await deleteSession(sid)
     throw new UnauthorizedError()
   }
 
-  return { userId: record.userId, email: record.email, avatarUrl: record.avatarUrl }
+  const lastRefreshAt = record.lastRefreshAt ?? record.createdAt
+  const refreshNeeded =
+    record.expiresAt - now <= REFRESH_WINDOW_SECONDS &&
+    now - lastRefreshAt >= REFRESH_COOLDOWN_SECONDS
+  if (refreshNeeded) {
+    await scheduleSessionRefresh(sid, record)
+  }
+  return {
+    me: { userId: record.userId, email: record.email, avatarUrl: record.avatarUrl }
+  }
 }
 
 const supabaseAnon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {

@@ -1,5 +1,10 @@
 import { Router } from 'express'
-import { startGithubOAuth, handleOAuthCallback, getMe, logout } from '../services/authService'
+import {
+  startGithubOAuth,
+  handleOAuthCallback,
+  getMe,
+  logout
+} from '../services/authService'
 
 export const authRouter = Router()
 
@@ -28,7 +33,7 @@ authRouter.get('/auth/callback', async (req, res, next) => {
 
 authRouter.get('/auth/me', async (req, res, next) => {
   try {
-    const me = await getMe(req)
+    const { me } = await getMe(req)
     return res.json(me)
   } catch (err) {
     return next(err)

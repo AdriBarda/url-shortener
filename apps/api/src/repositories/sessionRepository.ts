@@ -8,6 +8,7 @@ export type SessionRecord = {
   expiresAt: number // epoch seconds
   createdAt: number
   lastSeenAt: number
+  lastRefreshAt?: number
 }
 
 const key = (sid: string) => `sess:${sid}`
