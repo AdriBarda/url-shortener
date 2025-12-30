@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import UrlDetailsView from '@/views/UrlDetailsView.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,6 +38,27 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
   ],
+})
+
+let authReady: Promise<void> | null = null
+
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore()
+  if (!authReady) {
+    authReady = authStore.initAuth()
+  }
+  await authReady
+
+  if (to.name === 'login' && authStore.isAuthed) {
+    const next = (to.query.next as string) || '/dashboard'
+    return next
+  }
+
+  if (to.meta.requiresAuth && !authStore.isAuthed) {
+    return { name: 'login', query: { next: to.fullPath } }
+  }
+
+  return true
 })
 
 export default router
