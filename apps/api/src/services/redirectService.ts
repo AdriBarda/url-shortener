@@ -1,4 +1,5 @@
 import { findByShortCode } from '../repositories/urlRepository'
+import { recordClick } from '../repositories/clickRepository'
 import { cacheGet, cacheSet } from '../urlCache'
 import { GoneError, NotFoundError } from '../errors'
 
@@ -44,6 +45,20 @@ function describeExpiration(label: string, expirationTime?: string) {
 }
 
 export async function getRedirectLocation(shortCode: string): Promise<string> {
+  return getRedirectLocationWithMeta(shortCode, {})
+}
+
+export type RedirectMeta = {
+  userAgent?: string
+  referrer?: string
+  country?: string
+  region?: string
+}
+
+export async function getRedirectLocationWithMeta(
+  shortCode: string,
+  meta: RedirectMeta
+): Promise<string> {
   const c0 = process.hrtime.bigint()
   const cached = await cacheGet(shortCode)
   const c1 = process.hrtime.bigint()
@@ -52,6 +67,13 @@ export async function getRedirectLocation(shortCode: string): Promise<string> {
     devLog(`[cache] HIT ${shortCode} (${Number(c1 - c0) / 1e6}ms)`)
     describeExpiration('cache', cached.expirationTime)
     if (isExpired(cached.expirationTime)) throw new GoneError()
+    void recordClick({
+      shortCode,
+      referrer: meta.referrer,
+      userAgent: meta.userAgent,
+      country: meta.country,
+      region: meta.region
+    }).catch(() => undefined)
     return cached.originalUrl
   }
 
@@ -77,6 +99,14 @@ export async function getRedirectLocation(shortCode: string): Promise<string> {
       ttl
     )
   }
+
+  void recordClick({
+    shortCode,
+    referrer: meta.referrer,
+    userAgent: meta.userAgent,
+    country: meta.country,
+    region: meta.region
+  }).catch(() => undefined)
 
   return url.originalUrl
 }

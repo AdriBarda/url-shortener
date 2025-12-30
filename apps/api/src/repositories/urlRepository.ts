@@ -101,3 +101,32 @@ export async function findByUserId(
     createdAt: r.created_at
   })) as UrlListItem[]
 }
+
+export type UrlMeta = {
+  shortCode: string
+  originalUrl: string
+  createdAt: string
+  expirationTime?: string
+}
+
+export async function findByShortCodeForUser(
+  shortCode: string,
+  userId: string
+): Promise<UrlMeta | null> {
+  const { data, error } = await supabase
+    .from('urls')
+    .select('short_code, original_url, created_at, expiration_time')
+    .eq('short_code', shortCode)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return null
+
+  return {
+    shortCode: data.short_code,
+    originalUrl: data.original_url,
+    createdAt: data.created_at,
+    expirationTime: data.expiration_time ?? undefined
+  }
+}

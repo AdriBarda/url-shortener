@@ -1,4 +1,4 @@
-import type { CreateUrlRequest, CreateUrlResponse, UrlListItem } from '@repo/shared'
+import type { CreateUrlRequest, CreateUrlResponse, UrlListItem, UrlStats } from '@repo/shared'
 
 const API_BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
@@ -55,4 +55,18 @@ export const getMyUrls = async (): Promise<UrlListItem[]> => {
   }
 
   return (await res.json()) as UrlListItem[]
+}
+
+export const getUrlStats = async (shortCode: string): Promise<UrlStats> => {
+  const res = await fetch(`${API_BASE}/urls/${encodeURIComponent(shortCode)}/stats`, {
+    credentials: 'include'
+  })
+
+  if (!res.ok) {
+    const body = await readErrorBody(res)
+    const msg = body.message ?? body.error ?? `Request failed with ${res.status}`
+    throw new ApiError(msg, res.status, body.code)
+  }
+
+  return (await res.json()) as UrlStats
 }

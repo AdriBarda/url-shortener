@@ -3,10 +3,11 @@ import { createUrlRequestSchema } from '@repo/shared'
 import { ZodError } from 'zod'
 import { validateAndNormalizeUrl } from '../utils/normalizeUrl'
 import { isValidAlias } from '../utils/alias'
-import { ConflictError, ServiceUnavailableError, ValidationError } from '../errors'
+import { ConflictError, NotFoundError, ServiceUnavailableError, ValidationError } from '../errors'
 import { genCode } from '../utils/shortCode'
-import { createUrl, findByUserId } from '../repositories/urlRepository'
+import { createUrl, findByShortCodeForUser, findByUserId } from '../repositories/urlRepository'
 import { isUniqueViolation } from '../db/isUniqueViolation'
+import { getUrlStats } from '../repositories/clickRepository'
 
 const BASE_SHORT_URL = process.env.BASE_SHORT_URL
 
@@ -110,4 +111,19 @@ export async function createShortUrl(
 
 export async function getUserUrls(userId: string): Promise<UrlListItem[]> {
   return findByUserId(userId, { limit: 100 })
+}
+
+export async function getUrlStatsForUser(shortCode: string, userId: string) {
+  const url = await findByShortCodeForUser(shortCode, userId)
+  if (!url) {
+    throw new NotFoundError()
+  }
+
+  const stats = await getUrlStats(shortCode)
+  return {
+    shortCode,
+    totalClicks: stats.totalClicks,
+    lastClickedAt: stats.lastClickedAt,
+    clicksLast7Days: stats.clicksLast7Days
+  }
 }

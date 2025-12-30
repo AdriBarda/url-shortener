@@ -159,6 +159,7 @@ await processPendingShorten()
             <th class="px-4 py-2 font-semibold">Expires At</th>
             <th class="px-4 py-2 font-semibold text-center">Expired</th>
             <th class="px-4 py-2 font-semibold text-center">Copy</th>
+            <th class="px-4 py-2 font-semibold text-center">Details</th>
           </tr>
         </thead>
         <tbody>
@@ -212,6 +213,14 @@ await processPendingShorten()
                 </transition>
               </button>
               <p v-if="copyError" class="text-xs text-red-500 mt-1">{{ copyError }}</p>
+            </td>
+            <td class="px-4 py-2 text-center">
+              <router-link
+                class="inline-flex items-center justify-center px-3 py-2 text-xs rounded border border-gray-200 hover:bg-gray-50"
+                :to="{ name: 'url-details', params: { shortCode: url.shortCode } }"
+              >
+                View
+              </router-link>
             </td>
           </tr>
         </tbody>

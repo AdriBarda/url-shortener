@@ -25,4 +25,16 @@ export type UrlListItem = {
   createdAt: string
 }
 
+export type UrlClickSeriesPoint = {
+  date: string // YYYY-MM-DD
+  count: number
+}
+
+export type UrlStats = {
+  shortCode: string
+  totalClicks: number
+  lastClickedAt: string | null
+  clicksLast7Days: UrlClickSeriesPoint[]
+}
+
 export * from './validation.js'
