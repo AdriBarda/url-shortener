@@ -3,7 +3,7 @@ import cookie from 'cookie'
 import { createClient } from '@supabase/supabase-js'
 import { UnauthorizedError, ServiceUnavailableError } from '../errors'
 import { getSession, setSession, deleteSession } from '../repositories/sessionRepository'
-import { SID_COOKIE, SID_TTL_SECONDS } from '../config/session'
+import { MAX_SESSION_AGE_SECONDS, SID_COOKIE, SID_TTL_SECONDS } from '../config/session'
 import { decrypt, encrypt } from '../utils/crypto'
 
 const nowSec = (): number => Math.floor(Date.now() / 1000)
@@ -26,6 +26,11 @@ export const requireAuthSid = async (req: Request, _res: Response, next: NextFun
 
     const record = await getSession(sid)
     if (!record) return next(new UnauthorizedError())
+
+    if (nowSec() - record.createdAt > MAX_SESSION_AGE_SECONDS) {
+      await deleteSession(sid)
+      return next(new UnauthorizedError())
+    }
 
     if (record.expiresAt - nowSec() > REFRESH_SKEW_SECONDS) {
       req.auth = { userId: record.userId }

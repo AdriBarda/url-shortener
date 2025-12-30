@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import cookie from 'cookie'
 import { createSsrSupabaseClient } from '../utils/supabaseSsr'
 import { setSession, getSession, deleteSession } from '../repositories/sessionRepository'
-import { SID_COOKIE, SID_TTL_SECONDS, sidCookieOptions } from '../config/session'
+import { MAX_SESSION_AGE_SECONDS, SID_COOKIE, SID_TTL_SECONDS, sidCookieOptions } from '../config/session'
 import { ValidationError, UnauthorizedError, ServiceUnavailableError } from '../errors'
 import { encrypt, decrypt } from '../utils/crypto'
 import { createClient } from '@supabase/supabase-js'
@@ -110,6 +110,10 @@ export async function getMe(req: Request) {
 
   const record = await getSession(sid)
   if (!record) {
+    throw new UnauthorizedError()
+  }
+  if (Math.floor(Date.now() / 1000) - record.createdAt > MAX_SESSION_AGE_SECONDS) {
+    await deleteSession(sid)
     throw new UnauthorizedError()
   }
 
