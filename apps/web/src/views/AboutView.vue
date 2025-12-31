@@ -88,7 +88,7 @@
       <ul class="space-y-2 text-gray-700">
         <li class="flex items-start gap-2">
           <span class="mt-2.5 h-1.5 w-1.5 rounded-full bg-green-500 shrink-0"></span>
-          <span>Add link analytics (click counts, referrers).</span>
+          <span>Enhance link analytics (region, rate limiting...).</span>
         </li>
         <li class="flex items-start gap-2">
           <span class="mt-2.5 h-1.5 w-1.5 rounded-full bg-green-500 shrink-0"></span>
