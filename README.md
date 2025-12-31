@@ -33,7 +33,7 @@ packages/
 
 ## API Surface (relevant routes)
 - **Auth:** `GET /auth/github/start`, `GET /auth/callback`, `GET /auth/me`, `POST /auth/logout`
-- **URLs (auth required):** `POST /urls` (create), `GET /urls` (list current user URLs)
+- **URLs (auth required):** `POST /urls` (create), `GET /urls` (list current user URLs), `GET /urls/:shortCode/stats` (stats)
 - **Public:** `GET /:shortCode` (redirect)
 
 ## Frontend Behavior
@@ -51,6 +51,7 @@ pnpm --filter web dev      # Web (uses VITE_API_URL to talk to the API)
 ### Environment (API)
 Set at least:
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 - `BASE_SHORT_URL` (API public URL, for OAuth callback)
 - `WEB_APP_URL` (SPA origin, for redirects)
 - `CORS_ORIGIN` (defaults to `http://localhost:5173`)
