@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getUrlStats, ApiError } from '@/services/urlApi'
+import { getUrlStats, ApiError } from '@/api/urls'
 import type { UrlStats } from '@repo/shared'
 
 const route = useRoute()

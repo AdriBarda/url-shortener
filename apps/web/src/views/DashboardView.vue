@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { CreateUrlRequest, UrlListItem } from '@repo/shared'
-import { getMyUrls, ApiError } from '@/services/urlApi'
+import { getMyUrls, ApiError } from '@/api/urls'
 import { useAuthStore } from '@/stores/auth'
 import { useShortenUrl } from '@/composables/useShortenUrl'
 import { clearPendingShorten, getPendingShorten } from '@/utils/pendingShorten'

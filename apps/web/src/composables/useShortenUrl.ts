@@ -1,4 +1,4 @@
-import { createShortUrl, ApiError } from '@/services/urlApi'
+import { createShortUrl, ApiError } from '@/api/urls'
 import type { CreateUrlRequest, CreateUrlResponse } from '@repo/shared'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
