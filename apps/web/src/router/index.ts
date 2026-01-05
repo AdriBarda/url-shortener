@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
-import DashboardView from '@/views/DashboardView.vue'
-import UrlDetailsView from '@/views/UrlDetailsView.vue'
+import HomeView from '@/pages/HomeView.vue'
+import DashboardView from '@/pages/DashboardView.vue'
+import UrlDetailsView from '@/pages/UrlDetailsView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = createRouter({
@@ -18,12 +18,12 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      component: () => import('../pages/AboutView.vue'),
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/LoginView.vue'),
+      component: () => import('@/pages/LoginView.vue'),
     },
     {
       path: '/dashboard',
