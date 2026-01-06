@@ -39,3 +39,6 @@ __screenshots__/
 .env
 .env.*
 !.env.example
+
+# Agent rules (private)
+**/AGENTS.md
