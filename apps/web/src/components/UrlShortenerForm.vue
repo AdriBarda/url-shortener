@@ -117,14 +117,6 @@ const onSubmit = async () => {
   showResultModal.value = true
 }
 
-const handleUpdateAlias = (alias: string) => {
-  urlAlias.value = alias
-}
-
-const handleUpdateExpirationTime = (expTime: string) => {
-  expirationTime.value = expTime
-}
-
 const closeResultModal = () => {
   showResultModal.value = false
   reset()
@@ -155,13 +147,11 @@ const retryLastSubmit = async () => {
 
     <AdvancedOptions
       v-model="showAdvancedOptions"
-      :shortBaseUrl="shortBaseUrl"
-      :alias="urlAlias"
-      :expirationTime="expirationTime"
+      v-model:alias="urlAlias"
+      v-model:expiration-time="expirationTime"
+      :short-base-url="shortBaseUrl"
       :alias-error="aliasError"
       :expiration-error="expirationError"
-      @update:alias="handleUpdateAlias"
-      @update:expirationTime="handleUpdateExpirationTime"
     />
 
     <button
@@ -186,8 +176,8 @@ const retryLastSubmit = async () => {
     <ShortenResultModal
       v-if="showResultModal"
       :short-url="shortUrl"
-      :loading="loading"
-      :error="error"
+      :loading
+      :error
       @close="closeResultModal"
       @retry="retryLastSubmit"
     />

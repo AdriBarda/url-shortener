@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'sign-out'): void
+  'sign-out': []
 }>()
 
 const isUserMenuVisible = ref(false)

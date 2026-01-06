@@ -11,8 +11,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void
-  (e: 'retry'): void
+  close: []
+  retry: []
 }>()
 
 const { copying, lastCopied, copy } = useClipboard()

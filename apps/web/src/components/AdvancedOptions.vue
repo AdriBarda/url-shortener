@@ -2,47 +2,42 @@
 import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
-  modelValue: boolean
   shortBaseUrl: string
-  alias: string
-  expirationTime: string
   aliasError?: string | null
   expirationError?: string | null
 }>()
 
-const localExpirationTime = ref(props.expirationTime)
+const modelValue = defineModel<boolean>({ default: false })
+const alias = defineModel<string>('alias', { default: '' })
+const expirationTime = defineModel<string>('expirationTime', { default: '' })
+
+const localExpirationTime = ref(expirationTime.value)
 
 watch(
-  () => props.expirationTime,
+  () => expirationTime.value,
   (newValue) => {
     localExpirationTime.value = newValue
   },
 )
 
-const emit = defineEmits<{
-  'update:modelValue': [v: boolean]
-  'update:alias': [v: string]
-  'update:expirationTime': [v: string]
-}>()
-
 const aliasError = computed(() => props.aliasError ?? null)
 
 const aliasPreview = computed(() => {
-  const value = props.alias.trim() || 'your-alias'
+  const value = alias.value.trim() || 'your-alias'
   return `${props.shortBaseUrl}/${value}`
 })
 
 const handleExpirationInput = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
   localExpirationTime.value = value
-  emit('update:expirationTime', value)
+  expirationTime.value = value
 }
 
 const toggle = () => {
-  emit('update:modelValue', !props.modelValue)
-  if (props.modelValue) {
-    emit('update:alias', '')
-    emit('update:expirationTime', '')
+  modelValue.value = !modelValue.value
+  if (!modelValue.value) {
+    alias.value = ''
+    expirationTime.value = ''
   }
 }
 </script>
@@ -73,7 +68,7 @@ const toggle = () => {
       </div>
       <input
         :value="alias"
-        @input="emit('update:alias', ($event.target as HTMLInputElement).value)"
+        @input="alias = ($event.target as HTMLInputElement).value"
         placeholder="my-custom-alias"
         :class="[
           'flex-1 p-2 bg-white border rounded focus:outline-green-300 focus:border-green-400',
